@@ -63,6 +63,7 @@ if [ "${BRANCH}" == "main" ]; then
 
       mv CHANGELOG.md.new CHANGELOG.md
       git add CHANGELOG.md
+      git commit -m "docs: update changelog for ${NEW_VERSION}" || echo "No changelog changes"
     else
       echo "No new commits to add to changelog"
     fi
