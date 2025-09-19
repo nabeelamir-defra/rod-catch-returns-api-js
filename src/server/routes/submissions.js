@@ -5,7 +5,6 @@ import {
   SmallCatchCount,
   Submission
 } from '../../entities/index.js'
-import { createActivity, updateActivity } from '@defra-fish/dynamics-lib'
 import {
   createSubmissionSchema,
   getBySubmissionIdSchema,
@@ -13,6 +12,10 @@ import {
   getSubmissionsByContactSchema,
   updateSubmissionSchema
 } from '../../schemas/submission.schema.js'
+import {
+  handleCrmActivity,
+  isSubmissionExistsByUserAndSeason
+} from '../../services/submissions.service.js'
 import { handleNotFound, handleServerError } from '../../utils/server-utils.js'
 import { STATUSES } from '../../utils/constants.js'
 import { StatusCodes } from 'http-status-codes'
@@ -20,6 +23,7 @@ import logger from '../../utils/logger-utils.js'
 import { mapActivityToResponse } from '../../mappers/activities.mapper.js'
 import { mapSubmissionToResponse } from '../../mappers/submission.mapper.js'
 import { sequelize } from '../../services/database.service.js'
+import { updateActivity } from '@defra-fish/dynamics-lib'
 
 const BASE_SUBMISSIONS_URL = '/submissions/{submissionId}'
 
@@ -31,7 +35,7 @@ export default [
       /**
        * Create a new submission in the database
        *
-       * @param {import('@hapi/hapi').Request request - The Hapi request object
+       * @param {import('@hapi/hapi').Request} request - The Hapi request object
        * @param {import('@hapi/hapi').ResponseToolkit} h - The Hapi response toolkit
        * @returns {Promise<import('@hapi/hapi').ResponseObject>} - A response containing the target {@link Submission}
        */
@@ -48,28 +52,26 @@ export default [
             version: new Date()
           }
 
-          logger.info('Creating submission with details', submissionData)
+          logger.info('Checking if submission exists', submissionData)
 
-          const createdSubmission = await Submission.create(submissionData)
-
-          logger.info('Creating CRM activity with request:', contactId, season)
-
-          const createCrmActivityResponse = await createActivity(
+          const foundSubmission = await isSubmissionExistsByUserAndSeason(
             contactId,
             season
           )
 
-          if (createCrmActivityResponse.ErrorMessage) {
-            logger.error(
-              `failed to create activity in CRM for ${contactId}`,
-              createCrmActivityResponse.ErrorMessage
-            )
-          } else {
-            logger.info(
-              'Created CRM activity with result:',
-              createCrmActivityResponse
-            )
+          if (foundSubmission) {
+            const errorMessage = `Submission already exists for contact=${contactId} and season=${season}`
+            logger.error(errorMessage)
+            return h
+              .response({ error: errorMessage })
+              .code(StatusCodes.CONFLICT)
           }
+
+          logger.info('Creating submission with details', submissionData)
+
+          const createdSubmission = await Submission.create(submissionData)
+
+          await handleCrmActivity(contactId, season)
 
           const response = mapSubmissionToResponse(createdSubmission.toJSON())
 

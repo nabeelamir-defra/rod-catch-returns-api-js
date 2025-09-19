@@ -1,7 +1,7 @@
 import { extractRiverId, extractSubmissionId } from '../utils/entity-utils.js'
 import {
   getSubmission,
-  isSubmissionExists
+  isSubmissionExistsById
 } from '../services/submissions.service.js'
 import {
   getSubmissionByActivityId,
@@ -55,7 +55,7 @@ const validateDaysFishedWithMandatoryRelease = async (
 
 const validateSubmission = async (value, helper) => {
   const submissionId = extractSubmissionId(value)
-  const submissionExists = await isSubmissionExists(submissionId)
+  const submissionExists = await isSubmissionExistsById(submissionId)
   return submissionExists
     ? value
     : helper.message('ACTIVITY_SUBMISSION_NOT_FOUND')

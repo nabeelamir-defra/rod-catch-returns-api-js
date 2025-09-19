@@ -25,6 +25,10 @@ exports[`profile.integration GET /api/profile should return a list of all the ur
     },
     {
       "method": "GET",
+      "path": "/api/grilseProbabilities",
+    },
+    {
+      "method": "GET",
       "path": "/api/grilseWeightGates",
     },
     {
@@ -125,11 +129,7 @@ exports[`profile.integration GET /api/profile should return a list of all the ur
     },
     {
       "method": "GET",
-      "path": "/api/activities/{activityId}/smallCatches",
-    },
-    {
-      "method": "GET",
-      "path": "/api/activities/{activityId}/river",
+      "path": "/api/activities/{activityId}/submission",
     },
     {
       "method": "GET",
@@ -137,11 +137,15 @@ exports[`profile.integration GET /api/profile should return a list of all the ur
     },
     {
       "method": "GET",
-      "path": "/api/activities/{activityId}/submission",
+      "path": "/api/activities/{activityId}/river",
     },
     {
       "method": "GET",
-      "path": "/api/catches/{catchId}/method",
+      "path": "/api/activities/{activityId}/smallCatches",
+    },
+    {
+      "method": "GET",
+      "path": "/api/catches/{catchId}/species",
     },
     {
       "method": "GET",
@@ -149,7 +153,7 @@ exports[`profile.integration GET /api/profile should return a list of all the ur
     },
     {
       "method": "GET",
-      "path": "/api/catches/{catchId}/species",
+      "path": "/api/catches/{catchId}/method",
     },
     {
       "method": "GET",
@@ -202,6 +206,10 @@ exports[`profile.integration GET /api/profile should return a list of all the ur
     {
       "method": "DELETE",
       "path": "/api/catches/{catchId}",
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/grilseProbabilities/{grilseProbabilityId}",
     },
     {
       "method": "DELETE",

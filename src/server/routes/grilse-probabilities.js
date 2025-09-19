@@ -8,6 +8,7 @@ import {
 } from '../../services/grilse-probabilities.service.js'
 import {
   getGrilseProbabilityRequestParamSchema,
+  grilseProbabilityIdSchema,
   postGrilseProbabilityRequestParamSchema,
   postGrilseProbabilityRequestQuerySchema
 } from '../../schemas/grilse-probabilities.schema.js'
@@ -16,8 +17,100 @@ import { GrilseProbability } from '../../entities/index.js'
 import { GrilseValidationError } from '../../models/grilse-validation-error.model.js'
 import { StatusCodes } from 'http-status-codes'
 import logger from '../../utils/logger-utils.js'
+import { mapGrilseProbabilityToResponse } from '../../mappers/grilse-probabilities.mapper.js'
 
 export default [
+  {
+    method: 'GET',
+    path: '/grilseProbabilities',
+    options: {
+      /**
+       * Retrieve all the grilse probabilities in the database
+       *
+       * @param {import('@hapi/hapi').Request request - The Hapi request object
+       * @param {import('@hapi/hapi').ResponseToolkit} h - The Hapi response toolkit
+       * @returns {Promise<import('@hapi/hapi').ResponseObject>} - A response containing the target {@link GrilseProbability}
+       */
+      handler: async (_request, h) => {
+        try {
+          const foundGrilseProbabilities = await GrilseProbability.findAll()
+
+          const mappedGrilseProbabilities = foundGrilseProbabilities.map(
+            (grilseProbability) =>
+              mapGrilseProbabilityToResponse(grilseProbability)
+          )
+
+          return h
+            .response({
+              _embedded: {
+                grilseProbabilities: mappedGrilseProbabilities
+              }
+            })
+            .code(StatusCodes.OK)
+        } catch (error) {
+          return handleServerError(
+            'Error fetching grilse probabilities',
+            error,
+            h
+          )
+        }
+      },
+      description: 'Retrieve all the grilse probabilities in the database',
+      notes: 'Retrieve all the grilse probabilities in the database',
+      tags: ['api', 'grilseProbabilities']
+    }
+  },
+  {
+    method: 'DELETE',
+    path: '/grilseProbabilities/{grilseProbabilityId}',
+    options: {
+      /**
+       * Delete a grilse probability by its id in the database
+       *
+       * @param {import('@hapi/hapi').Request request - The Hapi request object
+       *     @param {string} request.params.grilseProbabilityId - The ID of the Grilse Probability to be deleted
+       * @param {import('@hapi/hapi').ResponseToolkit} h - The Hapi response toolkit
+       * @returns {Promise<import('@hapi/hapi').ResponseObject>} - A response containing the target {@link GrilseProbability}
+       */
+      handler: async (request, h) => {
+        try {
+          const grilseProbabilityId = request.params.grilseProbabilityId
+
+          logger.info(
+            'Deleting grilse probability with id:%s',
+            grilseProbabilityId
+          )
+          const deletedCount = await GrilseProbability.destroy({
+            where: { id: grilseProbabilityId }
+          })
+
+          logger.info(
+            'Deleted %s records for grilse probability with id:%s',
+            deletedCount,
+            grilseProbabilityId
+          )
+
+          if (deletedCount === 0) {
+            return h.response().code(StatusCodes.NOT_FOUND)
+          }
+
+          return h.response().code(StatusCodes.NO_CONTENT)
+        } catch (error) {
+          return handleServerError(
+            'Error deleting grilse probability',
+            error,
+            h
+          )
+        }
+      },
+      validate: {
+        params: grilseProbabilityIdSchema
+      },
+      description: 'Delete grilse probabilities by id in the database',
+      notes: 'Delete grilse probabilities by id in the database',
+      tags: ['api', 'grilseProbabilities']
+    }
+  },
   {
     method: 'POST',
     path: '/reporting/reference/grilse-probabilities/{season}/{gate}',

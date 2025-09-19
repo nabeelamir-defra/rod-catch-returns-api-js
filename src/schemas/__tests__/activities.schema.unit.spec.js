@@ -5,7 +5,7 @@ import {
 } from '../activities.schema.js'
 import {
   getSubmission,
-  isSubmissionExists
+  isSubmissionExistsById
 } from '../../services/submissions.service.js'
 import {
   getSubmissionByActivityId,
@@ -45,7 +45,7 @@ describe('activities.schema.unit', () => {
       fmtOrAdmin = false
     } = {}) => {
       getSubmission.mockResolvedValue({ season })
-      isSubmissionExists.mockResolvedValue(submissionExists)
+      isSubmissionExistsById.mockResolvedValue(submissionExists)
       isRiverInternal.mockResolvedValue(riverInternal)
       isActivityExists.mockResolvedValue(activityExists)
       isFMTOrAdmin.mockReturnValue(fmtOrAdmin)
@@ -98,7 +98,7 @@ describe('activities.schema.unit', () => {
       })
 
       it('should return an error if submission does not exist', async () => {
-        isSubmissionExists.mockResolvedValue(false)
+        isSubmissionExistsById.mockResolvedValue(false)
         const payload = getDefaultPayload()
 
         await expect(
@@ -155,7 +155,7 @@ describe('activities.schema.unit', () => {
 
       it('should return an error if the river could not be found', async () => {
         getSubmission.mockResolvedValue({ season: 2024 })
-        isSubmissionExists.mockResolvedValue(true)
+        isSubmissionExistsById.mockResolvedValue(true)
         const error = new Error('RIVER_NOT_FOUND')
         isRiverInternal.mockRejectedValueOnce(error)
         const payload = getDefaultPayload()
@@ -167,7 +167,7 @@ describe('activities.schema.unit', () => {
 
       it('should return an error if there is an error retrieving the river', async () => {
         getSubmission.mockResolvedValue({ season: 2024 })
-        isSubmissionExists.mockResolvedValue(true)
+        isSubmissionExistsById.mockResolvedValue(true)
         const error = new Error('Database error')
         isRiverInternal.mockRejectedValueOnce(error)
         const payload = getDefaultPayload()
@@ -399,7 +399,7 @@ describe('activities.schema.unit', () => {
       fmtOrAdmin = false
     } = {}) => {
       getSubmission.mockResolvedValue({ season })
-      isSubmissionExists.mockResolvedValue(submissionExists)
+      isSubmissionExistsById.mockResolvedValue(submissionExists)
       isRiverInternal.mockResolvedValue(riverInternal)
       isActivityExists.mockResolvedValue(activityExists)
       getSubmissionByActivityId.mockResolvedValue(submission)

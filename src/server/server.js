@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { apiPrefixRoutes, rootRoutes } from './routes/index.js'
+import { logRequest, logResponse } from '../utils/server-utils.js'
 import { Engine as CatboxRedis } from '@hapi/catbox-redis'
 import Hapi from '@hapi/hapi'
 import HealthCheck from './plugins/health.js'
@@ -80,6 +81,10 @@ export default async () => {
   await server.register(HealthCheck(server))
 
   server.route(rootRoutes)
+
+  server.ext('onRequest', logRequest)
+
+  server.ext('onPreResponse', logResponse)
 
   // prefix the routes below with /api
   server.realm.modifiers.route.prefix = '/api'

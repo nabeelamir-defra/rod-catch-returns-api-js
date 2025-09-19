@@ -15,12 +15,8 @@ describe('grilse-probabilities.integration', () => {
     await server.stop()
   })
 
-  const deleteGrilseProbabilitiesForSeasons = (seasons) => {
-    return GrilseProbability.destroy({
-      where: {
-        season: seasons
-      }
-    })
+  const deleteAllGrilseProbabilities = () => {
+    return GrilseProbability.truncate()
   }
 
   const loadFixture = (fileName) => {
@@ -40,9 +36,110 @@ describe('grilse-probabilities.integration', () => {
     })
   }
 
+  describe('GET /api/grilseProbabilities', () => {
+    beforeEach(async () => {
+      await deleteAllGrilseProbabilities()
+    })
+
+    const expectedGrilseProbability = (massInPounds, month, probability) => ({
+      id: expect.any(String),
+      massInPounds,
+      month,
+      probability,
+      season: 2024,
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
+      _links: {
+        self: {
+          href: expect.stringMatching(/\/api\/grilseProbabilities\/\d+$/)
+        },
+        grilseProbability: {
+          href: expect.stringMatching(/\/api\/grilseProbabilities\/\d+$/)
+        },
+        gate: {
+          href: expect.stringMatching(/\/api\/grilseProbabilities\/\d+\/gate$/)
+        }
+      }
+    })
+
+    it('should return all grilseProbabilities', async () => {
+      // Upload grilse probabilities file
+      const fileBuffer = loadFixture('valid-grilse-data-1-datapoint.csv')
+      const fileUploadresult = await uploadFile(
+        server,
+        '/api/reporting/reference/grilse-probabilities/2024/1',
+        fileBuffer
+      )
+      expect(fileUploadresult.statusCode).toBe(201)
+
+      // ensure they are all returned
+      const result = await server.inject({
+        method: 'GET',
+        url: '/api/grilseProbabilities'
+      })
+
+      expect(result.statusCode).toBe(200)
+
+      expect(JSON.parse(result.payload)._embedded.grilseProbabilities).toEqual(
+        expect.arrayContaining([
+          expectedGrilseProbability(1, 8, '0.2440000000000000'),
+          expectedGrilseProbability(1, 9, '0.6670000000000000'),
+          expectedGrilseProbability(1, 10, '1.0000000000000000'),
+          expectedGrilseProbability(1, 11, '0.1430000000000000'),
+          expectedGrilseProbability(1, 12, '0.6670000000000000')
+        ])
+      )
+    })
+  })
+
+  describe('DELETE /api/grilseProbabilities/{grilseProbabilityId}', () => {
+    beforeEach(async () => {
+      await deleteAllGrilseProbabilities()
+    })
+
+    it('should return a 204 status code if the GrilseProbability is deleted', async () => {
+      // Upload grilse probabilities file
+      const fileBuffer = loadFixture('valid-grilse-data-1-datapoint.csv')
+      const fileUploadresult = await uploadFile(
+        server,
+        '/api/reporting/reference/grilse-probabilities/2024/1',
+        fileBuffer
+      )
+      expect(fileUploadresult.statusCode).toBe(201)
+
+      // ensure they are all returned
+      const result = await server.inject({
+        method: 'GET',
+        url: '/api/grilseProbabilities'
+      })
+
+      // get the first grilseProbability in the list
+      const grilseProbabilityToDelete = JSON.parse(result.payload)._embedded
+        .grilseProbabilities[0]
+
+      const deletedGrilseProbability = await server.inject({
+        method: 'DELETE',
+        url: `/api/grilseProbabilities/${grilseProbabilityToDelete.id}`
+      })
+
+      expect(deletedGrilseProbability.statusCode).toBe(204)
+      expect(deletedGrilseProbability.payload.length).toBe(0)
+    })
+
+    it('should return a 404 status code if the GrilseProbability does not exist', async () => {
+      const result = await server.inject({
+        method: 'DELETE',
+        url: '/api/grilseProbabilities/0'
+      })
+
+      expect(result.statusCode).toBe(404)
+      expect(result.payload.length).toBe(0)
+    })
+  })
+
   describe('POST /api/reporting/reference/grilse-probabilities/{season}/{gate}', () => {
     beforeEach(async () => {
-      await deleteGrilseProbabilitiesForSeasons([2024])
+      await deleteAllGrilseProbabilities()
     })
 
     it('should return 201 if the csv file is uploaded successfully', async () => {
@@ -267,7 +364,7 @@ describe('grilse-probabilities.integration', () => {
 
   describe('GET /api/reporting/reference/grilse-probabilities/{season}', () => {
     beforeEach(async () => {
-      await deleteGrilseProbabilitiesForSeasons([2022, 2023, 2024])
+      await deleteAllGrilseProbabilities()
     })
 
     it('should return 200 and a result if the season is valid', async () => {

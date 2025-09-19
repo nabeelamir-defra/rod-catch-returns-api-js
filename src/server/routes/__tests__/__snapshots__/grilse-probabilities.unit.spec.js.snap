@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`grilse-probabilities.unit GET /grilseProbabilities should return a 200 status code and the species if the call to fetch all species is successful 1`] = `
+{
+  "_embedded": {
+    "grilseProbabilities": [
+      {
+        "_links": {
+          "gate": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2/gate",
+          },
+          "grilseProbability": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2",
+          },
+          "self": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2",
+          },
+        },
+        "createdAt": "2025-09-01T08:57:34.479Z",
+        "id": "2",
+        "massInPounds": 6,
+        "month": 4,
+        "probability": "1.0000000000000000",
+        "season": 2025,
+        "updatedAt": "2025-09-01T08:57:34.479Z",
+      },
+      {
+        "_links": {
+          "gate": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2/gate",
+          },
+          "grilseProbability": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2",
+          },
+          "self": {
+            "href": "http://localhost:5000/api/grilseProbabilities/2",
+          },
+        },
+        "createdAt": "2025-09-01T08:57:34.479Z",
+        "id": "2",
+        "massInPounds": 6,
+        "month": 5,
+        "probability": "0.9920000000000000",
+        "season": 2025,
+        "updatedAt": "2025-09-01T08:57:34.479Z",
+      },
+    ],
+  },
+}
+`;

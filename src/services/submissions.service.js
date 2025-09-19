@@ -1,4 +1,6 @@
 import { Activity, Catch, Submission } from '../entities/index.js'
+import { createActivity as createActivityCRM } from '@defra-fish/dynamics-lib'
+import logger from '../utils/logger-utils.js'
 
 /**
  * Checks if a submission exists in the database by its ID.
@@ -6,8 +8,20 @@ import { Activity, Catch, Submission } from '../entities/index.js'
  * @param {number|string} submissionId - The ID of the submission to check.
  * @returns {Promise<boolean>} - A promise that resolves to `true` if the submission exists, otherwise `false`.
  */
-export const isSubmissionExists = async (submissionId) => {
+export const isSubmissionExistsById = async (submissionId) => {
   const count = await Submission.count({ where: { id: submissionId } })
+  return count > 0
+}
+
+/**
+ * Checks if a submission exists in the database by the contactId and season.
+ *
+ * @param {string} contactId - The ID of the contact retrieved from CRM
+ * @param {string} season - The season of the submission
+ * @returns {Promise<boolean>} - A promise that resolves to `true` if the submission exists, otherwise `false`.
+ */
+export const isSubmissionExistsByUserAndSeason = async (contactId, season) => {
+  const count = await Submission.count({ where: { contactId, season } })
   return count > 0
 }
 
@@ -59,4 +73,32 @@ export const getSubmissionByCatchId = async (catchId) => {
       `Failed to fetch submission for catch ID ${catchId}: ${error}`
     )
   }
+}
+
+/**
+ * Handle CRM activity creation with logging
+ * @param {string} contactId
+ * @param {string|number} season
+ */
+export const handleCrmActivity = async (contactId, season) => {
+  logger.info('Creating CRM activity with request:', contactId, season)
+
+  const result = await createActivityCRM(contactId, season)
+
+  if (result?.ErrorMessage) {
+    const logFn =
+      result.ErrorMessage ===
+      'RCR Activity Already Exists For the Given Contact and Activity Status'
+        ? logger.info
+        : logger.error
+
+    logFn(
+      `Failed to create activity in CRM for ${contactId}`,
+      result.ErrorMessage
+    )
+  } else {
+    logger.info('Created CRM activity with result:', result)
+  }
+
+  return result
 }

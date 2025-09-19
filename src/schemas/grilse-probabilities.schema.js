@@ -31,3 +31,9 @@ export const getGrilseProbabilityRequestParamSchema = Joi.object({
     )
     .required()
 })
+
+export const grilseProbabilityIdSchema = Joi.object({
+  grilseProbabilityId: Joi.number()
+    .required()
+    .description('The id of the grilse probability')
+})

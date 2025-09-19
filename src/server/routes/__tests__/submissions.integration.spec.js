@@ -308,6 +308,23 @@ describe('submissions.integration', () => {
 
       expect(result.statusCode).toBe(500)
     })
+
+    it('should return a 409 and error message if a submission exists with the same contactId and season', async () => {
+      // create submission
+      await createSubmission(server, CONTACT_IDENTIFIER_CREATE_SUBMISSION)
+
+      // create submission again with the same details
+      const result = await createSubmission(
+        server,
+        CONTACT_IDENTIFIER_CREATE_SUBMISSION
+      )
+
+      expect(result.statusCode).toBe(409)
+      expect(JSON.parse(result.payload)).toEqual({
+        error:
+          'Submission already exists for contact=contact-identifier-create-submission and season=2023'
+      })
+    })
   })
 
   describe('GET /api/submissions/search/findByContactId?contact_id={contactId}', () => {

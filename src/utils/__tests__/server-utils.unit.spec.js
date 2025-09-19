@@ -1,4 +1,9 @@
-import { handleNotFound, handleServerError } from '../server-utils.js'
+import {
+  handleNotFound,
+  handleServerError,
+  logRequest,
+  logResponse
+} from '../server-utils.js'
 import { getMockResponseToolkit } from '../../test-utils/server-test-utils.js'
 import logger from '../logger-utils.js'
 
@@ -48,6 +53,79 @@ describe('logger-utils.unit', () => {
         error: 'Server error'
       })
       expect(result.statusCode).toBe(500)
+    })
+  })
+
+  describe('logRequest', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    const getMockRequest = (overrides = {}) => ({
+      method: 'get',
+      path: '/test',
+      ...overrides
+    })
+
+    it('should log the request', () => {
+      logRequest(getMockRequest(), getMockResponseToolkit())
+
+      expect(logger.info).toHaveBeenCalledWith('GET /test')
+    })
+
+    it('should return h.continue', () => {
+      const h = getMockResponseToolkit()
+      const result = logRequest(getMockRequest(), h)
+
+      expect(result).toBe(h.continue)
+    })
+
+    it('should not log if path includes /service-status', () => {
+      const request = getMockRequest({
+        path: '/service-status'
+      })
+
+      logRequest(request, getMockResponseToolkit())
+
+      expect(logger.info).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('logResponse', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    const getMockRequest = (overrides = {}) => ({
+      method: 'get',
+      path: '/test',
+      response: {
+        statusCode: 200
+      },
+      ...overrides
+    })
+
+    it('should log the response', () => {
+      logResponse(getMockRequest(), getMockResponseToolkit())
+
+      expect(logger.info).toHaveBeenCalledWith('GET /test -> 200')
+    })
+
+    it('should return h.continue', () => {
+      const h = getMockResponseToolkit()
+      const result = logResponse(getMockRequest(), h)
+
+      expect(result).toBe(h.continue)
+    })
+
+    it('should not log if path includes /service-status', () => {
+      const request = getMockRequest({
+        path: '/service-status'
+      })
+
+      logResponse(request, getMockResponseToolkit())
+
+      expect(logger.info).not.toHaveBeenCalled()
     })
   })
 })

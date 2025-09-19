@@ -1,3 +1,4 @@
+import { logRequest, logResponse } from '../../utils/server-utils.js'
 import { Engine as CatboxRedis } from '@hapi/catbox-redis'
 import Hapi from '@hapi/hapi'
 import HealthCheck from '../plugins/health.js'
@@ -187,6 +188,22 @@ describe('server.unit', () => {
     const server = await initialiseServer()
 
     expect(server.ext).toHaveBeenCalledWith('onPreAuth', tokenService)
+  })
+
+  it('should add an interceptor to log all incoming requests', async () => {
+    sequelize.authenticate.mockResolvedValueOnce()
+
+    const server = await initialiseServer()
+
+    expect(server.ext).toHaveBeenCalledWith('onRequest', logRequest)
+  })
+
+  it('should add an interceptor to log all outgoing responses', async () => {
+    sequelize.authenticate.mockResolvedValueOnce()
+
+    const server = await initialiseServer()
+
+    expect(server.ext).toHaveBeenCalledWith('onPreResponse', logResponse)
   })
 
   it('should log successful connection message when database connection is successful', async () => {
