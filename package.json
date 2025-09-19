@@ -1,6 +1,6 @@
 {
   "name": "rod-catch-returns-api",
-  "version": "0.11.0-rc.0",
+  "version": "0.11.0",
   "description": "rod catch returns api js",
   "main": "index.js",
   "type": "module",
