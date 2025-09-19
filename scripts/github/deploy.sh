@@ -43,6 +43,36 @@ if [ "${BRANCH}" == "main" ]; then
     PREVIOUS_VERSION=$(git tag --list --merged main --sort=version:refname | egrep '^v[0-9]*\.[0-9]*\.[0-9]*(-rc\.[0-9]*)?$' | tail -1)
     echo "Latest build on the main branch is ${PREVIOUS_VERSION}"
     NEW_VERSION="v$(semver "${PREVIOUS_VERSION}" -i ${RELEASE_TYPE})"
+
+    echo "Updating CHANGELOG.md"
+
+    # Find the latest *stable* release tag (no -rc)
+    PREVIOUS_STABLE=$(git tag --list --merged main --sort=version:refname | egrep '^v[0-9]+\.[0-9]+\.[0-9]+$' | tail -1)
+    echo "Previous stable release: ${PREVIOUS_STABLE}"
+
+    # Collect commits since the previous stable release
+    if [ -z "${PREVIOUS_STABLE}" ]; then
+      # First ever release, include all commits
+      COMMITS=$(git log --pretty=format:"- %s (%an, %ad)" --date=short)
+    else
+      COMMITS=$(git log "${PREVIOUS_STABLE}"..HEAD --pretty=format:"- %s (%an, %ad)" --date=short)
+    fi
+
+    if [ -n "${COMMITS}" ]; then
+      {
+        echo "## ${NEW_VERSION} - $(date +%Y-%m-%d)"
+        echo ""
+        echo "${COMMITS}"
+        echo ""
+        cat CHANGELOG.md 2>/dev/null || true
+      } > CHANGELOG.md.new
+
+      mv CHANGELOG.md.new CHANGELOG.md
+      git add CHANGELOG.md
+      git commit -m "docs: update changelog for ${NEW_VERSION}" || echo "No changelog changes"
+    else
+      echo "No new commits to add to changelog"
+    fi
 elif [ "$BRANCH" == "develop" ]; then
     # Creating new release on the develop branch, determine latest release version on either develop or main
     PREVIOUS_VERSION=$(git tag --list --sort=version:refname | egrep '^v[0-9]*\.[0-9]*\.[0-9]*(-rc\.[0-9]*)?$' | tail -1)
