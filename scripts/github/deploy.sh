@@ -50,13 +50,7 @@ if [ "${BRANCH}" == "main" ]; then
     PREVIOUS_STABLE=$(git tag --list --merged main --sort=version:refname | egrep '^v[0-9]+\.[0-9]+\.[0-9]+$' | tail -1)
     echo "Previous stable release: ${PREVIOUS_STABLE}"
 
-    # Collect commits since the previous stable release
-    if [ -z "${PREVIOUS_STABLE}" ]; then
-      # First ever release, include all commits
-      COMMITS=$(git log --pretty=format:"- %s (%an, %ad)" --date=short)
-    else
-      COMMITS=$(git log "${PREVIOUS_STABLE}"..HEAD --pretty=format:"- %s (%an, %ad)" --date=short)
-    fi
+    COMMITS=$(git log "${PREVIOUS_STABLE}"..HEAD --pretty=format:"- %s (%an, %ad)" --date=short)
 
     if [ -n "${COMMITS}" ]; then
       {
@@ -69,7 +63,6 @@ if [ "${BRANCH}" == "main" ]; then
 
       mv CHANGELOG.md.new CHANGELOG.md
       git add CHANGELOG.md
-      git commit -m "docs: update changelog for ${NEW_VERSION}" || echo "No changelog changes"
     else
       echo "No new commits to add to changelog"
     fi
